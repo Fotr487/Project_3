@@ -1,12 +1,16 @@
 # Project_3
+
 Final project for the Engeto Academy hurray.... xD
+
 This project let you extract results of the Czech parliament elections from 2017. The source URL for this project can be found here
 https://volby.cz/pls/ps2017nss/ps3?xjazyk=CZ
 
 Libraries
+
 You can find the list of libraries needed for running this project in the file "requirements.txt".
 
 Running the Elections Scraper
+
 You will need two arguments to run the Elections Scraper project (main_scrapper.py):
 
 The first one is URL you get when you click on 'X' which is in table under collumn ("Výběr okrsku");
@@ -14,6 +18,7 @@ The second one is the name for your file
 The results will be downloaded and saved to a .csv file for you.
 
 Example
+
 Elections Scraper will get you the results of municipality Liberec:
 
 First argument: https://volby.cz/pls/ps2017nss/ps32?xjazyk=CZ&xkraj=7&xnumnuts=5103
