@@ -1,12 +1,11 @@
 import sys
 import csv
-import requests as req
-from bs4 import BeautifulSoup as BS
+import requests as rq
+from bs4 import BeautifulSoup as bs
 
 DIVI = "=" * 80
 URL = "https://volby.cz/pls/ps2017nss/"
 USER_URL = "https://volby.cz/pls/ps2017nss/ps3?xjazyk=CZ"
-BS4_ES = "html.parser"
 
 
 def name_creation():
@@ -17,27 +16,31 @@ def name_creation():
     else:
         return name
 
-def file_use(name):
-    file = open(name + ".csv", mode="w")
-    file_writer = csv.writer(file, delimiter="|")
 
-def names_id(ln, lst):
-    lst.append(ln.find("a").string)
-    lst.append(ln.parent.find_all()[2].string)
+def get_id_name(line, lst):
+    lst.append(line.find("a").string)
+    lst.append(line.parent.find_all()[2].string)
     return lst
 
-def souping(ln, link):
-    rg_url = req.get(link + ln.find("a").attrs["href"])
-    return BS(rg_url.text, BS4_ES)
+
+def souping(line, url):
+    region_url = rq.get(url + line.find("a").attrs["href"])
+    return bs(region_url.text, "html.parser")
+
 
 def voters_finder(region_result, lst):
-    sa = ["sa2", "sa3", "sa6"]
-    for s in sa:
-        lst.append(region_result.find("td", {"class": "cislo", "headers": f"{s}"}))
+    lst.append(region_result.find("td", {"class": "cislo", "headers": "sa2"}).string)
+    lst.append(region_result.find("td", {"class": "cislo", "headers": "sa3"}).string)
+    lst.append(region_result.find("td", {"class": "cislo", "headers": "sa6"}).string)
     return lst
 
+
 def party_votes_finder(parties, lst):
-    pass
+    for line in parties:
+        if not line.find("th"):
+            lst.append(line.find_all("td", {"class": "cislo"})[1].string)
+    return lst
+
 
 def main():
     print(f"""
@@ -54,20 +57,43 @@ THERE YOU HAVE TO CHOOSE REGION BY CLICKING ON 'X' IN COLUMN TITLED 'VYBER OBCE'
     if "&xnumnuts=" not in link and "https://volby.cz/pls/ps2017nss/ps32?xjazyk=CZ&x" not in link:
         print("INVALID URL. TURNING OFF. HAVE A NICE DAY...")
         sys.exit(0)
+
     name = name_creation()
-    file_use(name=name)
-    scp = req.get(link)
-    usi = BS(scp.text, BS4_ES)
-    regs = usi.find_all("td", {"class": "cislo"})
+    file = open(name + ".csv", mode="w")
+    file_writer = csv.writer(file, delimiter=";")
+
     header = False
+    scrap = rq.get(link)
+    usi = bs(scrap.text, "html.parser")
+    regs = usi.find_all("td", {"class": "cislo"})
 
     for lini in regs:
-        regs_dat = []
-        regs_dat = names_id(ln=lini, lst=regs_dat)
-        regs_soup = souping(ln=lini, link=link)
-        regs_res = regs_soup.find(id="ps311_6_t1")
+        region_data = []
+        region_data = get_id_name(lini, region_data)
+        regs_soup = souping(lini, URL)
+        region_results = regs_soup.find(id="ps311_t1")
+        region_data = voters_finder(region_result=region_results, lst=region_data)
+        parties = regs_soup.find(id="inner").find_all("tr")
+        region_data = party_votes_finder(parties=parties, lst=region_data)
+
+        if not header:
+            print("ALMOST THERE")
+            clmn_nm = ["ID", "NAME", "REGISTERED VOTERS", "ENVELOPES", "VALID VOTES"]
+            for new_line in parties:
+                if not new_line.find("th"):
+                    clmn_nm.append(new_line.find_all("td")[1].string)
+            file_writer.writerow(clmn_nm)
+            header = True
+        file_writer.writerow(region_data)
+    file.close()
+    print(f"""
+{DIVI}
+THE JOB IS DONE ψ(｀∇´)ψ,
+{name}.csv IS READY FOR CHECKING.
+I HOPE YOU WILL USE THIS DATA FOR GOOD. XD
+MAY THE FORCE BE WITH YOU...""")
+    sys.exit(0)
 
 
-
-name_creation()
-#main()
+if __name__ == '__main__':
+    sys.exit(main())
