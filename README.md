@@ -1,7 +1,4 @@
-# Project_3
-
-Final project for the Engeto Academy hurray.... xD
-
+# 
 This project let you extract results of the Czech parliament elections from 2017. The source URL for this project can be found here
 https://volby.cz/pls/ps2017nss/ps3?xjazyk=CZ
 
